@@ -32,7 +32,7 @@ public class MeshPainter : MonoBehaviour
         RaycastHit hitInfo;
         if(Physics.Raycast(ray, out hitInfo, 100f))
         {
-            GameObject decal =  Instantiate(decalPrefab, hitInfo.point, Quaternion.FromToRotation(Vector3.up, hitInfo.normal));
+            GameObject decal =  Instantiate(decalPrefab, hitInfo.point, Quaternion.FromToRotation(Vector3.back, hitInfo.normal));
         }
     }
 }
