@@ -6,13 +6,24 @@ using UnityEngine.Rendering.Universal;
 public class MeshPainter : MonoBehaviour
 {
     [SerializeField] GameObject decalPrefab;
+    public float pointSpacing = 0.1f;
+    bool canDraw = false;
     
     void Update()
     {
         // Check for mouse click
-        if (Input.GetMouseButtonDown(0) || Input.GetMouseButton(0) )
+        if (Input.GetMouseButtonDown(0))
+        {
+            tempPos = GetPoint();
+            canDraw = true;
+        }
+        else if (Input.GetMouseButton(0) )
         {
             InstantiateDecal();
+        }
+        else
+        {
+            canDraw = false;
         }
         if (Input.touchCount > 0)
         {
@@ -23,16 +34,64 @@ public class MeshPainter : MonoBehaviour
             {
                 InstantiateDecal();
             }
+            else
+            {
+                tempPos = GetPoint();
+                canDraw = true;
+            }
+        }else
+        {
+            canDraw = false;
         }
+        
     }
 
+    Vector3 GetPoint()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hitInfo;
+        if(Physics.Raycast(ray, out hitInfo, 100f))
+        {
+            return hitInfo.point;
+        }
+        return Vector3.zero;
+    }
+
+    private Vector3 tempPos;
     void InstantiateDecal()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hitInfo;
         if(Physics.Raycast(ray, out hitInfo, 100f))
         {
-            GameObject decal =  Instantiate(decalPrefab, hitInfo.point, Quaternion.FromToRotation(Vector3.back, hitInfo.normal));
+            if(tempPos == hitInfo.point)
+                return;
+            
+            if(tempPos == Vector3.zero)
+                tempPos = hitInfo.point;
+
+            foreach (var point in GeneratePoints(tempPos,hitInfo.point))
+            {
+                Instantiate(decalPrefab, point, Quaternion.FromToRotation(Vector3.back, hitInfo.normal));
+            }
+            tempPos = hitInfo.point;
         }
     }
+    
+    List<Vector3> GeneratePoints(Vector3 pointA, Vector3 pointB)
+    {
+        List<Vector3> pointsList = new List<Vector3>();
+        float distance = Vector3.Distance(pointA, pointB);
+        int numPoints = Mathf.FloorToInt(distance / pointSpacing);
+    
+        for (int i = 0; i <= numPoints; i++)
+        {
+            float t = i / (float)numPoints;
+            Vector3 point = Vector3.Lerp(pointA, pointB, t);
+            pointsList.Add(point);
+        }
+
+        return pointsList;
+    }
+    
 }
